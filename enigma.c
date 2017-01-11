@@ -144,7 +144,6 @@ void rotateRotors(){
 
 void main(){
 	char c;
-	int q=50;
 	init();
 	scanf("%c",&c);
 	c=toupper(c);
@@ -154,11 +153,11 @@ void main(){
 		c=passThroughReflectors(c);
 		c=passThroughRotors(c,BACKWARD);
 		c=passThroughPlugBoard(c,FORWARD);
-		printf("%c\n\n",c);
+		printf("%c",c);
 		rotateRotors();
-		q--;
-
+		
 		scanf("%c",&c);
 		c=toupper(c);
 	}
+	printf("\n");
 }
