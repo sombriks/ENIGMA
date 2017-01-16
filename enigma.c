@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<ctype.h>
+
 #define FORWARD 1
 #define BACKWARD 2
 
@@ -142,22 +143,26 @@ void rotateRotors(){
 	}
 }
 
-void main(){
-	char c;
-	init();
-	scanf("%c",&c);
-	c=toupper(c);
-	while(c!=' '){
-		c=passThroughPlugBoard(c,FORWARD);
-		c=passThroughRotors(c,FORWARD);
-		c=passThroughReflectors(c);
-		c=passThroughRotors(c,BACKWARD);
-		c=passThroughPlugBoard(c,FORWARD);
-		printf("%c",c);
-		rotateRotors();
-		
-		scanf("%c",&c);
-		c=toupper(c);
-	}
-	printf("\n");
+// void main(){
+//   char c;
+//   init();
+//   scanf("%c",&c);
+//   c=toupper(c);
+//   while(c!=' '){
+//     c=passThroughPlugBoard(c,FORWARD);
+//     c=passThroughRotors(c,FORWARD);
+//     c=passThroughReflectors(c);
+//     c=passThroughRotors(c,BACKWARD);
+//     c=passThroughPlugBoard(c,FORWARD);
+//     printf("%c",c);
+//     rotateRotors();
+//
+//     scanf("%c",&c);
+//     c=toupper(c);
+//   }
+//   printf("\n");
+// }
+
+int main(int argc, char **argv){
+  printf("%d\n",argc);
 }
