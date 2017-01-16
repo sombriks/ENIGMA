@@ -14,3 +14,4 @@ http://www.cs.miami.edu/home/harald/enigma/
 http://www.dcode.fr/enigma-machine-cipher
 
 http://www.counton.org/explorer/codebreaking/enigma-cipher.php
+- esse site tem uma versão em js bastante decente...
