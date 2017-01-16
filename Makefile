@@ -2,7 +2,7 @@
 enigma: enigma.o
 	gcc enigma.o -o enigma
 
-enigma.o:
+enigma.o: enigma.c
 	gcc -c enigma.c
 
 clean:

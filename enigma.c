@@ -1,5 +1,6 @@
-#include<stdio.h>
-#include<ctype.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
 
 #define FORWARD 1
 #define BACKWARD 2
@@ -163,6 +164,34 @@ void rotateRotors(){
 //   printf("\n");
 // }
 
-int main(int argc, char **argv){
-  printf("%d\n",argc);
+int main(int argc, char **argv){  
+  
+  init();
+  
+  if(argc < 2){
+    printf("usage: enigma <message>\nmessage: the message being transformed\n");
+    return 1;
+  }
+  
+  int len = strlen(argv[1]);
+  
+  printf("input size: %d\n", len);
+  
+  int i = -1;
+  
+  while(++i<len){
+    char c;
+    c = argv[1][i];
+    c=toupper(c);
+    c=passThroughPlugBoard(c,FORWARD);
+    c=passThroughRotors(c,FORWARD);
+    c=passThroughReflectors(c);
+    c=passThroughRotors(c,BACKWARD);
+    c=passThroughPlugBoard(c,FORWARD);
+    printf("%c",c);
+    rotateRotors();
+  }
+  printf("\n");
+  
+  return 0;
 }
