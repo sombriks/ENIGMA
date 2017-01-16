@@ -166,8 +166,6 @@ void rotateRotors(){
 
 int main(int argc, char **argv){  
   
-  init();
-  
   if(argc < 2){
     printf("usage: enigma <message>\nmessage: the message being transformed\n");
     return 1;
@@ -179,6 +177,8 @@ int main(int argc, char **argv){
   
   int i = -1;
   
+  init();
+  
   while(++i<len){
     char c;
     c = argv[1][i];
@@ -187,7 +187,7 @@ int main(int argc, char **argv){
     c=passThroughRotors(c,FORWARD);
     c=passThroughReflectors(c);
     c=passThroughRotors(c,BACKWARD);
-    c=passThroughPlugBoard(c,FORWARD);
+    c=passThroughPlugBoard(c,BACKWARD);
     printf("%c",c);
     rotateRotors();
   }
