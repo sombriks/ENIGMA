@@ -1,379 +1,187 @@
-/* enigma simulation and bombe, harald schmidl, april 1998
-  the encoding scheme uses code from Fauzan Mirza's
-  3 rotor German Enigma simulation
-  Written by  */
 
-#include <stdio.h>
+// http://www.counton.org/explorer/codebreaking/enigma-cipher.php
+// TODO traduzir isso aqui pra C
 
-
-#define MSGLEN 80
-#define TO 'E'
-
-
-/* Rotor wirings */
-char rotor[5][26]={
-	/* Input "ABCDEFGHIJKLMNOPQRSTUVWXYZ" */
-	/* 1: */ "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
-	/* 2: */ "AJDKSIRUXBLHWTMCQGZNPYFVOE",
-	/* 3: */ "BDFHJLCPRTXVZNYEIWGAKMUSQO",
-	/* 4: */ "ESOVPZJAYQUIRHXLNFTGKDCMWB",
-	/* 5: */ "VZBRGITYUPSDNHLXAWMJQOFECK" };
-char ref[26]="YRUHQSLDPXNGOKMIEBFZCWVJAT";
-
-char notch[5]="QEVJZ";
-
-/* Encryption parameters follow */
-
-typedef struct P
-{
-  char order[3];/*={ 1, 2, 3 };*/
-  char rings[3];/*={ 'A','A','A' };*/
-  char pos[3];/*={ 'A','A','A' };*/
-  char plug[10];/*="AMTE";*/
-} Params;
-
-/*take a char and return its encoded version according to the 
-  encryption params, update params, i.e. advance wheels
-  this part uses Fauzan Mirza's code*/
-char scramble(char c, Params *p)
-{
-  int i, j, flag = 0;
-
-		c=toupper(c);
-		if (!isalpha(c))
-			return -1;
-		
-		/* Step up first rotor */
-		p->pos[0]++;
-		if (p->pos[0]>'Z')
-			p->pos[0] -= 26;
-
-		/* Check if second rotor reached notch last time */
-		if (flag)
-		{
-			/* Step up both second and third rotors */
-			p->pos[1]++;
-			if (p->pos[1]>'Z')
-				p->pos[1] -= 26;
-			p->pos[2]++;
-			if (p->pos[2]>'Z')
-				p->pos[2] -= 26;
-			flag=0;
-		}
-
-		/*  Step up second rotor if first rotor reached notch */
-		if (p->pos[0]==notch[p->order[0]-1])
-		{
-			p->pos[1]++;
-			if (p->pos[1]>'Z')
-				p->pos[1] -= 26;
-			/* Set flag if second rotor reached notch */
-			if (p->pos[1]==notch[p->order[1]-1])
-				flag=1;
-		}
-
-		/*  Swap pairs of letters on the plugboard */
-		for (i=0; p->plug[i]; i+=2)
-		{
-			if (c==p->plug[i])
-				c=p->plug[i+1];
-			else if (c==p->plug[i+1])
-				c=p->plug[i];
-		}
-
-		/*  Rotors (forward) */
-		for (i=0; i<3; i++)
-		{
-			c += p->pos[i]-'A';
-			if (c>'Z')
-				c -= 26;
-
-			c -= p->rings[i]-'A';
-			if (c<'A')
-				c += 26;
-
-			c=rotor[p->order[i]-1][c-'A'];
-
-			c += p->rings[i]-'A';
-			if (c>'Z')
-				c -= 26;
-
-			c -= p->pos[i]-'A';
-			if (c<'A')
-				c += 26;
-		}
-
-		/*  Reflecting rotor */
-		c=ref[c-'A'];
-
-		/*  Rotors (reverse) */
-		for (i=3; i; i--)
-		{
-			c += p->pos[i-1]-'A';
-			if (c>'Z')
-				c -= 26;
-
-			c -= p->rings[i-1]-'A';
-			if (c<'A')
-				c += 26;
-
-			for (j=0; j<26; j++)
-				if (rotor[p->order[i-1]-1][j]==c)
-					break;
-			c=j+'A';
-
-			c += p->rings[i-1]-'A';
-			if (c>'Z')
-				c -= 26;
-
-			c -= p->pos[i-1]-'A';
-			if (c<'A')
-				c += 26;
-		}
-		
-		/*  Plugboard */
-		for (i=0; p->plug[i]; i+=2)
-		{
-			if (c==p->plug[i])
-				c=p->plug[i+1];
-			else if (c==p->plug[i+1])
-				c=p->plug[i];
-		}
-
-  return c;
-}
-
-/*take a string, return encoded string*/
-char *enigma(char *in, Params *p)
-{
-  int j;
-  char out[MSGLEN];
-  for(j = 0; j < strlen(in); j++)
-  out[j] = scramble(in[j], p);
-  out[j] = '\0';
-  return out;
-}
-
-/*read in a string, and pass it through enigma*/
-void cypher(Params p)
-{
-  char in[MSGLEN], s[MSGLEN];
-  int c, i = 0;
-
-  while((c = getchar()) != '\n')
+/******************************** Wheel(ORDER) :: Constructor ******************************/
+function makeWheel(order)
+ {
+ this.letter_order = new Array(51);
+ this.letters = new Array(51);
+ this.enc_position = 0;
+ this.dec_position = 0;
+ for(i=0;i<order.length;i++)
   {
-    in[i] = toupper(c);
-    i++;
+  this.letter_order[i] = charToNumber(order.charAt(i));
+  this.letters[i] = order.charAt(i);
   }
-  in[i] = '\0';
-  strcpy(s, enigma(in, &p));
-  printf("\n%s\n%s\n", s, in);
+ }
+
+var key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?@ "
+//Gets the number of the letter ie. a=0,b=1,c=2 etc
+function charToNumber(c)
+ {
+ var v = -1;
+ v = key_order.indexOf(c)
+ return v;
+ }
+//Gets the letter of the number ie. 0=a,1=b,2=c etc
+function numberToChar(b)
+ {
+ var a='*';
+ a = key_order.charAt(b)
+ return a;
 }
 
-/*given a cipher text, and a crib, test all possible settings of wheel order a, b, c*/
-void rotate(int a, int b, int c, char *cyph, char *crib, char *plug, int *ct)
-{
-  Params p;
+/******************************** Encryption and Decryption ******************************/
 
-  p.order[0] = a;
-  p.order[1] = b;
-  p.order[2] = c;
-  p.rings[0] = p.rings[1] = p.rings[2] = 'A';
-  strcpy(p.plug, plug);
-  for(p.pos[0] = 'A'; p.pos[0] <= 'Z'; p.pos[0]++)
+var no_debug = 1
+
+//The Wheels
+var wheel = new Array(4);
+wheel[0] = new makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?@81\"5'+$(6)-7");
+wheel[1] = new makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9@");
+wheel[2] = new makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/");
+wheel[3] = new makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@");
+var total_wheels = 4
+
+var letter_order = new Array(51);
+var l=0;
+var letter_limit = 51;
+
+//Encrytes the Message given as parameter
+function Encryptor(input_text)
+ {
+ getInputs()
+
+ input_text = input_text.toLowerCase(); //Convert to lower case
+ l = input_text.length;
+
+ var c="";
+ var output_text = "";
+ for(i=0;i<l;i++)
   {
-    for(p.pos[1] = 'A'; p.pos[1] <= 'Z'; p.pos[1]++)
-    {
-      for(p.pos[2] = 'A'; p.pos[2] <= 'Z'; p.pos[2]++)
-      {
-/*        for(p.rings[0] = 'A'; p.rings[0] <= 'Z'; p.rings[0]++)
-        {
-          for(p.rings[1] = 'A'; p.rings[1] <= 'Z'; p.rings[1]++)
-          {
-            for(p.rings[2] = 'A'; p.rings[2] <= 'Z'; p.rings[2]++)
-            {
-*/	      Params cp = p;
-	      int i = 0;
+  c = input_text.charAt(i);
+  letters_number = charToNumber(c); //Get the numarical value
+  pos = letters_number;
 
-	      while(strlen(crib) > i)
-	      {
-		if(cyph[i] != scramble(crib[i], &cp))
-		break;
-		else
-		i++;
-	      }
-	      if(strlen(crib) == i)
-	      {
-		char s[MSGLEN];
-
-		(*ct)++;
-	        printf("Wheels %d %d %d Start %c %c %c Rings %c %c %c Stecker \"%s\"\n",
-                        p.order[0], p.order[1], p.order[2], 
-                        p.pos[0], p.pos[1], p.pos[2],
-                        p.rings[0], p.rings[1], p.rings[2], p.plug);
-		cp = p;
-		strcpy(s, enigma(cyph, &cp));
-                printf("%s decoded -> %s\n", cyph, s);
-              }
-/*            }
-          }
-        }
-*/      }
-    }
-  }
-}
-
-/*do the whole check including steckering of up to two pairs of letters*/
-void test(int a, int b, int c, char *cyph, char *crib, int *ct)
-{
-  char A, B, C, D;
-  int i = 0, cs;
-  char s[5];
-
-  strcpy(s, "");
-  printf("Checking wheels %d %d %d\n",  a, b, c); 
-  for(cs = 0; cs < 3; cs++)
-  {
-    if(cs > 0)
-    {
-      for(A = 'A'; A <= TO; A++)
-      {
-        for(B = A + 1; B <= TO; B++)
-        {
-	  s[0] = A;
-	  s[1] = B;
-	  s[2] = '\0';
-	  if(cs > 1)
-	  {
-	    for(C = A + 1; C <= TO; C++)
-	    {
-	      if(C == B)
-	      continue;
-	      for(D = C + 1; D <= TO; D++)
-              {
-	        if(D == A || D == B)
-		continue;
-		i++;
-		s[2] = C;
-		s[3] = D;
-		s[4] = '\0';
-                rotate(a, b, c, cyph, crib, s, ct);
-	      }
-            }
-          }
-	  else
-	  rotate(a, b, c, cyph, crib, s, ct);
-        }
-      }
-    }
-    else
-    rotate(a, b, c, cyph, crib, s, ct);
-  }
-}
-
-
-/*run on all permutations of wheels a, b, c*/
-void permute(int a, int b, int c, char *cyph, char *crib, int *ct)
-{
-  test(a, b, c, cyph, crib, ct);
-  test(a, c, b, cyph, crib, ct);
-  test(b, a, c, cyph, crib, ct);
-  test(b, c, a, cyph, crib, ct);
-  test(c, a, b, cyph, crib, ct);
-  test(c, b, a, cyph, crib, ct);
-}
-
-/*all triples of five possible wheels*/
-void permuteAll(char *cyph, char *crib)
-{
-  int ct = 0;
-
-  permute(1, 2, 3, cyph, crib, &ct);
-  permute(1, 2, 4, cyph, crib, &ct);
-  permute(1, 2, 5, cyph, crib, &ct);
-  permute(1, 3, 4, cyph, crib, &ct);
-  permute(1, 3, 5, cyph, crib, &ct);
-  permute(1, 4, 5, cyph, crib, &ct);
-  permute(2, 3, 4, cyph, crib, &ct);
-  permute(2, 3, 5, cyph, crib, &ct);
-  permute(2, 4, 5, cyph, crib, &ct);
-  permute(3, 4, 5, cyph, crib, &ct);
-  printf("\nFound %d solutions.\n", ct);
-}
-
-/*helper to read a character*/
-char readCh()
-{
-  char c, ret;
-
-  while((c = getchar()) != '\n')
-  ret = c;
-  return ret;
-}
-
-/*init the starting position*/
-void initParams(Params *p)
-{
-  int i;
-  char c;
-
-  printf("d)efault or u)ser: ");
-  c = readCh();
-  if(c != 'u')
-  {
-    for(i = 0; i < 3; i++)
-    {
-      p->order[i] = i + 1;
-      p->rings[i] = 'A';
-      p->pos[i] = 'A';
-    }
-    strcpy(p->plug, "");
-  }
+  if(letters_number==-1) c='*';	//If the inputed char is not a alphabet
   else
-  {
-      for(i = 0; i < 3; i++)
-      {
-        printf("Wheel %d: ", i + 1);
-        p->order[i] = readCh() - 48;
-      }
-      for(i = 0; i < 3; i++)
-      {
-/*        printf("Ring  %d: ", i + 1);*/
-        p->rings[i] = 'A';/*readCh();*/
-      }
-      for(i = 0; i < 3; i++)
-      {
-        printf("Start %d: ", i + 1);
-        p->pos[i] = readCh();
-      }
-      printf("Stecker: ");
-      i = 0;
-      while((c = getchar()) != '\n')
-      {
-        p->plug[i] = c;
-	i++;
-      }
-      p->plug[i] = '\0';
-  }
-  printf("Wheels %d %d %d Start %c %c %c Rings %c %c %c Stecker \"%s\"\n",
-         p->order[0], p->order[1], p->order[2], 
-         p->pos[0], p->pos[1], p->pos[2],
-         p->rings[0], p->rings[1], p->rings[2], p->plug);
-}
+   {
+   	  					 	   if(!no_debug) info(2,"Char:"+c+",No:"+fill(letters_number)+"->")
+   //To this for all the wheels
+   for(k=total_wheels-1;k>=0;k--)
+    {
+	pos = pos + wheel[k].enc_position; //Turns the wheel to its 'enc_position'
+    if(pos >= letter_limit) pos = pos - letter_limit; //Makes the corrections. The wheel is a circle. So if it is after 25 it must be corrected
+	if(k > 0) pos = wheel[k].letter_order[pos]; //Finds the number at 'pos' and give it for the next wheel. This is needed for all wheel execpt the last (0'th) Wheel
+	 						   if(!no_debug) info(2,"|"+fill(pos)+"("+fill(wheel[k].enc_position)+"-"+wheel[k].letters[pos]+") in W "+k);
+	}
 
+   c = numberToChar(wheel[0].letter_order[pos]);
+  								if(!no_debug) info(0," -> "+c);
+   }
+  wheel[0].enc_position++; //Turns the wheel one time
 
-/********************************************MAIN*********************************************/
-void main(int argc, char *argv[])
-{
-  Params p;
+  for(k=0;k<total_wheels;k++)
+   {
+   if(wheel[k].enc_position>letter_limit) //One full turn of any wheel is completed
+    {
+    wheel[k].enc_position=0;
+	if(k+1 != total_wheels) wheel[k+1].enc_position++; //Do this if the current wheel is not the last wheel
+    }
+   }
 
-  if(argc > 2)  /*bombe case*/
-  {
-    permuteAll(argv[1], argv[2]);
+  output_text = output_text + c; //Get the final result, letter by letter
   }
-  else
+   			  				  	if(!no_debug) info(0,"The Encrypted text is \""+output_text+"\"\n");
+ return output_text
+ }
+
+//Decrypts the Message
+function Decryptor(input_text)
+ {
+ getInputs()
+
+ input_text = input_text.toLowerCase();
+ l = input_text.length;
+
+ var c=' ';
+ var output_text = "";
+
+ for(j=0;j<l;j++)
   {
-    initParams(&p);
-    cypher(p);
+  c = input_text.charAt(j);
+
+  var decrypt = ' ';
+  var to = -1;
+  var from = charToNumber(c); //Gets the 'from' of the encrypted charecter
+  var ch = from
+   	  					 	   if(!no_debug) info(2,"Char:"+c+",No:"+fill(from)+"->")
+  for(k=0;k<total_wheels;k++)
+   {
+   for(i=0;i<letter_limit;i++) //Go thru every letter in the wheel,
+    if(wheel[k].letter_order[i] == ch) {ch = i;break;} //Searching the char 'c'(as a number) in the 'letter_order'. If found, the position is sorted in 'ch'.
+
+   ch = ch - wheel[k].dec_position;	//Adjusts the wheel position
+   if(ch < 0) ch = ch + letter_limit; //If the given 'to' is before a, find its original char from end
+   		   	  	   	  		   if(!no_debug) info(2,"|"+fill(ch)+"("+fill(wheel[k].dec_position)+"-"+wheel[k].letters[ch]+") in W "+k);
+   }
+  to=ch
+  wheel[0].dec_position++; //Turns the wheel one step
+
+  decrypt=numberToChar(to); //Find the letter in 'to'
+  if(c=='*') decrypt = '*'; //If the inputed text is a non-recoganizable charector, output '*'
+ 	 	  	   			 	   if(!no_debug) info(0," -> "+decrypt);
+  for(k=0;k<total_wheels;k++)
+   {
+   if(wheel[k].dec_position > letter_limit)	//If dec_position exeeds the limit, start at top
+    {
+    wheel[k].dec_position=0;
+    if(k+1 != total_wheels) wheel[k+1].dec_position++; //Do this if the current wheel is not the last wheel
+    }
+   }
+  output_text = output_text + decrypt;
   }
-}
+   			  				  if(!no_debug) info(0,"The Decrypted Text is \""+output_text+"\"");
+ return output_text;
+ }
+
+/************ getInputs() :: Find the user set variables from forms ************/
+function getInputs()
+ {
+ //Wheel starts at given positions
+ wheel[0].enc_position = validate(f.one.value);
+ wheel[1].enc_position = validate(f.two.value);
+ wheel[2].enc_position = validate(f.three.value);
+ wheel[3].enc_position = validate(f.four.value);
+
+ wheel[0].dec_position = validate(f.one.value);
+ wheel[1].dec_position = validate(f.two.value);
+ wheel[2].dec_position = validate(f.three.value);
+ wheel[3].dec_position = validate(f.four.value);
+
+ if(f.debug.checked) no_debug=0;
+ else no_debug=1;
+ }
+function validate(no)
+ {
+ no=no.toLowerCase()
+ no = charToNumber(no)
+ if(no > letter_limit-1) no = letter_limit-1;
+ else if(no < 0) no = 0;
+ return no
+ }
+
+/************ info() :: Displays the debuging info ************/
+function info(cls,text)
+ {
+ if(cls==1) txt.value = ""
+ else if(cls==0) txt.value = txt.value + text + "\n"
+ else if(cls==2) txt.value = txt.value + text
+ }
+/************ fill() :: Fills spaces in numbers ************/
+//"2" becomes "2 " - done for making order in the debug textarea
+function fill(no)
+ {
+ if(no<10) no=no+" "
+ return no}

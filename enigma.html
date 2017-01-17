@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="enigma.js"></script>
+</head>
+
+<body>
+<h3>The Enigma Machine Application</h3><br>
+
+<form name="f">
+
+<b>Position</b><br>
+<input class="cipher" name="one" type="text" value="A" size=1>
+<input class="cipher" name="two" type="text" value="A" size=1>
+<input class="cipher" name="three" type="text" value="A" size=1>
+<input class="cipher" name="four" type="text" value="A" size=1>
+
+<br><br>
+<input type="hidden" name="debug" value="check me">
+
+<br><br>
+Inputed Text: <input name="mess" type="text" value="Hello World"> <input type="button" value="Encrypt" onClick="decrypt.value = Encryptor(mess.value)">
+
+<br><br>
+Encrypted Text: <input name="decrypt" type="text" value=""> <input type="button" value="Decrypt" onClick="results.value = Decryptor(decrypt.value)">
+<br><br>
+Decrypted Text: <input name="results" type="text" value=""> <input type="button" value="Clear" onClick="decrypt.value='';results.value='';">
+</form>
+
+</body>
+
+</html>
