@@ -171,7 +171,6 @@ function validate(no)
  else if(no < 0) no = 0;
  return no
  }
-
 /************ info() :: Displays the debuging info ************/
 function info(cls,text)
  {
@@ -184,4 +183,4 @@ function info(cls,text)
 function fill(no)
  {
  if(no<10) no=no+" "
- return no}
+ return no}
