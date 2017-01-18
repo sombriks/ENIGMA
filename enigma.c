@@ -37,8 +37,6 @@ struct wheel wheels[4];
 
 const int total_wheels = 4;
 
-int l = 0;
-
 struct form {
   char one;
   char two;
@@ -76,14 +74,9 @@ void getInputs() {
 
 char *toLowerCase(char *input, int len) {
   
-  printf("2.1\n");
-  
   char *ret = malloc(len * sizeof(char));
   
-  printf("2.2\n");
-  
   while(len--){
-    printf("len = %d\n",len);
     ret[len] = tolower(input[len]);
   }
   
@@ -102,31 +95,24 @@ void info(int op, char *msg) {
 
 char numberToChar(int b) {
   char a = '*';
-  if(b > 0 && b < letter_limit -1)
+  if(b >= 0 && b < letter_limit -1)
     a = key_order[b];
   return a;
 }
 
 //Encrytes the Message given as parameter
 char *Encryptor(char *raw_input_text,int input_len) {
-  
-  printf("1\n");
-  
+    
   // setup wheels 
   getInputs();
-  
-  printf("2\n");
-  
+    
   // input_text = input_text.toLowerCase(); //Convert to lower case
   char *input_text = toLowerCase(input_text,input_len);
-  //   char *input_text = input_len;
-  l = input_len;
-  
-  printf("3\n");
-  
+  int l = input_len;
+    
   char c;
-  
   char *output_text = malloc(input_len * sizeof(char));
+  
   for (int i = 0; i < l; i++) {
     c = input_text[i];
     int letters_number = charToNumber(c); //Get the numarical value
@@ -178,6 +164,75 @@ char *Encryptor(char *raw_input_text,int input_len) {
   return output_text;
 }
 
+//Decrypts the Message
+char *Decryptor(char *raw_input_text,int input_len) {
+  
+  // setup wheels 
+  getInputs();
+  
+  char *input_text = toLowerCase(raw_input_text,input_len);
+  int l = input_len;
+  
+  char c;
+  char *output_text = malloc(input_len * sizeof(char));
+  
+  for (int j = 0; j < l; j++) {
+    c = input_text[j];
+    
+    char decrypt = ' ';
+    int to = -1;
+    int from = charToNumber(c); //Gets the 'from' of the encrypted charecter
+    int ch = from;
+    if (!no_debug) {      
+      char buf[14];
+      sprintf(buf,"Char: %c,No:%d ->",c,from);
+      info(2, buf);// info(2, "Char:" + c + ",No:" + fill(from) + "->")
+    }
+    for (int k = 0; k < total_wheels; k++) {
+      for (int i = 0; i < letter_limit; i++) //Go thru every letter in the wheel,
+        if (wheels[k].letter_order[i] == ch) { ch = i; break; } //Searching the char 'c'(as a number) in the 'letter_order'. If found, the position is sorted in 'ch'.
+        
+        ch = ch - wheels[k].dec_position;	//Adjusts the wheel position
+        if (ch < 0) ch = ch + letter_limit; //If the given 'to' is before a, find its original char from end
+        if (!no_debug) {
+//           info(2, "|" + fill(ch) + "(" + fill(wheels[k].dec_position) + "-" + wheels[k].letters[ch] + ") in W " + k);
+          char buf[25];
+          sprintf(buf,"| %d (%d - %c) in W %d",ch,wheels[k].dec_position,wheels[k].letters[ch],k);
+          info(2,buf);
+          
+        }
+    }
+    to = ch;
+    wheels[0].dec_position++; //Turns the wheel one step
+    
+    decrypt = numberToChar(to); //Find the letter in 'to'
+    if (c == '*') decrypt = '*'; //If the inputed text is a non-recoganizable charector, output '*'
+    if (!no_debug) {
+      //       info(0, " -> " + decrypt);
+      char buf[5];
+      sprintf(buf," -> %c",decrypt);
+      info(0, buf);      
+    }
+    for (int k = 0; k < total_wheels; k++) {
+      if (wheels[k].dec_position > letter_limit)	//If dec_position exeeds the limit, start at top
+      {
+        wheels[k].dec_position = 0;
+        if (k + 1 != total_wheels) wheels[k + 1].dec_position++; //Do this if the current wheel is not the last wheel
+      }
+    }
+    output_text[j] = decrypt;
+  }
+  if (!no_debug) {
+//     info(0, "The Decrypted Text is \"" + output_text + "\"");
+//     console.log(txt.value);
+//     txt.value = "";
+    char buf[100];
+    sprintf(buf,"The Decrypted text is \"%s\"\n",output_text);
+    info(0, buf);
+  }
+  return output_text;
+}
+
 int main(int argc, char **argv) {
   
   // set up wheels
@@ -186,7 +241,7 @@ int main(int argc, char **argv) {
   wheels[2] = makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/",letter_limit);
   wheels[3] = makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@",letter_limit);
   
-  // teste
+  // teste TODO implementar a interface de linha de comando que nem na versão do nodejs
   
   f.one = 'A';
   f.two = 'A';
@@ -195,10 +250,15 @@ int main(int argc, char **argv) {
   f.debug = 1;
   
   
-  char *in = strdup("xUxa");
+  char *in = strdup("xUxa");// tem que dar dup porque a string é const
   char *out = Encryptor(in,4);
   
-  printf("< %s\n> %s\n",in,out);
+  printf("Encrypt:\n< %s\n> %s\n",in,out);
+  
+  in = strdup("@u14");
+  out = Decryptor(in,4);
+  
+  printf("Decrypt:\n< %s\n> %s\n",in,out);
   
   return 0;
 }
