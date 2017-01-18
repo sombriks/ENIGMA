@@ -9,6 +9,15 @@
 
 var key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?@ ";
 
+var no_debug = 0;
+
+//Gets the number of the letter ie. a=0,b=1,c=2 etc
+function charToNumber(c) {
+  var v = -1;
+  v = key_order.indexOf(c)
+  return v;
+}
+
 function makeWheel(order) {
   this.letter_order = new Array(51);
   this.letters = new Array(51);
@@ -19,13 +28,6 @@ function makeWheel(order) {
     this.letters[i] = order.charAt(i);
   }
 }
-
-//Gets the number of the letter ie. a=0,b=1,c=2 etc
-function charToNumber(c) {
-  var v = -1;
-  v = key_order.indexOf(c)
-  return v;
-}
 //Gets the letter of the number ie. 0=a,1=b,2=c etc
 function numberToChar(b) {
   var a = '*';
@@ -35,7 +37,6 @@ function numberToChar(b) {
 
 /******************************** Encryption and Decryption ******************************/
 
-var no_debug = 0
 
 //The Wheels
 var wheel = new Array(4);
@@ -45,7 +46,6 @@ wheel[2] = new makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/"
 wheel[3] = new makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@");
 var total_wheels = 4
 
-var letter_order = new Array(51);
 var l = 0;
 var letter_limit = 51;
 
@@ -89,8 +89,12 @@ function Encryptor(input_text) {
 
     output_text = output_text + c; //Get the final result, letter by letter
   }
-  if (!no_debug) info(0, "The Encrypted text is \"" + output_text + "\"\n");
-  return output_text
+  if (!no_debug) {
+    info(0, "The Encrypted text is \"" + output_text + "\"\n");
+    console.log(txt.value);
+    txt.value = "";
+  }
+  return output_text;
 }
 
 //Decrypts the Message
@@ -134,7 +138,11 @@ function Decryptor(input_text) {
     }
     output_text = output_text + decrypt;
   }
-  if (!no_debug) info(0, "The Decrypted Text is \"" + output_text + "\"");
+  if (!no_debug) {
+    info(0, "The Decrypted Text is \"" + output_text + "\"");
+    console.log(txt.value);
+    txt.value = "";
+  }
   return output_text;
 }
 
