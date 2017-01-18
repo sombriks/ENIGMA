@@ -14,7 +14,7 @@ var no_debug = 0;
 //Gets the number of the letter ie. a=0,b=1,c=2 etc
 function charToNumber(c) {
   var v = -1;
-  v = key_order.indexOf(c)
+  v = key_order.indexOf(c);
   return v;
 }
 
