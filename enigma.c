@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?@ ";
+const char *key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?\n ";
 const int letter_limit = 51;
 
 int no_debug = 0;
@@ -279,36 +279,23 @@ int main(int argc, char **argv)
 {
 
   // set up wheels
-  wheels[0] = makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?@81\"5'+$(6)-7", letter_limit);
-  wheels[1] = makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9@", letter_limit);
-  wheels[2] = makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/", letter_limit);
-  wheels[3] = makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@", letter_limit);
-
-  // f.one = 'A';
-  // f.two = 'A';
-  // f.three = 'A';
-  // f.four = 'A';
-  // f.debug = 1;
-
-  // char *in = strdup("xUxa");// tem que dar dup porque a string é const
-  // char *out = Encryptor(in,4);
-
-  // printf("Encrypt:\n< %s\n> %s\n",in,out);
-
-  // in = strdup("@u14");
-  // out = Decryptor(in,4);
-
-  // printf("Decrypt:\n< %s\n> %s\n",in,out);
+  wheels[0] = makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?\n81\"5'+$(6)-7", letter_limit);
+  wheels[1] = makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9\n", letter_limit);
+  wheels[2] = makeWheel("x6pr8g7+2!n0$dw\\z?\n4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/", letter_limit);
+  wheels[3] = makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4\n", letter_limit);
 
   if (argc < 3)
   {
-    printf("usage:\n%s <POSITION> <OPERATION> [<DEBUG>]\n", argv[0]);
+    printf("usage:\n%s <POSITION> <OPERATION> [<DEBUG>] [<FILENAME>]\n", argv[0]);
     printf("POSITION: the 4-letter initial rotor position (ex: AAAA)\n");
     printf("OPERATION: either enc (to encrypt) or dec (to decrypt)\n");
     printf("DEBUG: (optional) pass either 1 to get debug messages or 0 to leave it alone\n");
+    printf("FILENAME: provide a filename to read insteadof enter interactive mode\n");
     return 1;
   }
 
+  printf("%s %s %s %s",argv[1],argv[2],argv[3],argv[4]);
+  
   char *position = strdup(argv[1]);
 
   if (strlen(position) < 4)
@@ -331,18 +318,37 @@ int main(int argc, char **argv)
   if (argc > 3)
     f.debug = atoi(argv[3]);
   
-  char *line = NULL;
-  size_t len; // how many chars we've read
-
-  printf("provide the message to %s:\n< ", isenc ? "encrypt" : "decrypt");
-
-  // this is posix, should work everywhere!
-  getline(&line,&len,stdin);
+  char *buffer;
+  size_t length;
+  
+  // we're going to file mode
+  if(argc > 4 ){
+    
+    FILE *f = fopen (argv[4], "rb");
+    
+    if (f)
+    {
+      fseek (f, 0, SEEK_END);
+      length = ftell (f);
+      fseek (f, 0, SEEK_SET);
+      buffer = malloc (length);
+      if (buffer)
+      {
+        fread (buffer, 1, length, f);
+      }
+      fclose (f);
+    }
+  }else{
+    // no file provided, let's got to the interactive mode    
+    printf("provide the message to %s:\n< ", isenc ? "encrypt" : "decrypt");
+    // this is posix, should work everywhere!
+    getline(&buffer,&length,stdin);    
+  }
 
   if(isenc)
-    printf("> %s\n",Encryptor(line,strlen(line)));
+    printf("> %s\n",Encryptor(buffer,strlen(buffer)));
   else
-    printf("> %s\n",Decryptor(line,strlen(line)));
+    printf("> %s\n",Decryptor(buffer,strlen(buffer)));
 
   return 0;
 }

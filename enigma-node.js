@@ -7,7 +7,7 @@
 
 /******************************** Wheel(ORDER) :: Constructor ******************************/
 
-var key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?@ ";
+var key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?\n ";
 
 var no_debug = 0;
 
@@ -40,10 +40,10 @@ function numberToChar(b) {
 
 //The Wheels
 var wheel = new Array(4);
-wheel[0] = new makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?@81\"5'+$(6)-7");
-wheel[1] = new makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9@");
-wheel[2] = new makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/");
-wheel[3] = new makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@");
+wheel[0] = new makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?\n81\"5'+$(6)-7");
+wheel[1] = new makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9\n");
+wheel[2] = new makeWheel("x6pr8g7+2!n0$dw\\z?\n4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/");
+wheel[3] = new makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4\n");
 var total_wheels = 4
 
 var l = 0;
@@ -209,11 +209,12 @@ function fill(no) {
 // 
 
 if (process.argv.length < 3) {
-  console.log("usage:\nnode enigma-node.js <POSITIONS> <OPERATION> [<DEBUG>]");
+  console.log("usage:\nnode enigma-node.js <POSITIONS> <OPERATION> [<DEBUG>] [FILENAME]");
   console.log("POSITIONS: 4 letter from the 51 chars (ex: AAAA)");
   console.log("OPERATION: if we're encrypting (enc) or decrypting (dec)");
-  console.log("DEBUG [optional]: pass anything if you want to debug (1, true, debug, go)");
-  console.log("the encryption/decryption will take place in the interactive mode.");
+  console.log("DEBUG (optional): pass anything if you want to debug (1, true, debug, go)");
+  console.log("FILENAME (optional): read from file instead open interactive mode.")
+  console.log("If FILENAME is not provided, the encryption/decryption will take place in the interactive mode.");
   process.exit(1);
 }
 
@@ -231,6 +232,7 @@ f.two = pos[1];
 f.three = pos[2];
 f.four = pos[3];
 f.debug = process.argv[4] || false;
+if(f.debug == "0") f.debug = false;
 
 var op = process.argv[3];
 
@@ -238,6 +240,19 @@ if (op != "enc" && op != "dec") {
   console.log("OPERATION must be either enc or dec");
   process.exit(1);
 }
+
+if(process.argv[5]){
+  const fs = require("fs");
+  let entrada = fs.readFileSync(process.argv[5],"utf-8");
+  console.log("< "+entrada);
+  if(op == "enc")
+    console.log("> "+ Encryptor(entrada));
+  else if(op == "dec")
+    console.log("> "+Decryptor(entrada));
+  process.exit(0);
+}
+
+// let's go interactive otherwise
 
 const readline = require('readline');
 
