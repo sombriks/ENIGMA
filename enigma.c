@@ -152,7 +152,8 @@ char *Encryptor(char *raw_input_text, int input_len)
         if (pos >= letter_limit)
           pos = pos - letter_limit; //Makes the corrections. The wheel is a circle. So if it is after 25 it must be corrected
         if (k > 0)
-          pos = wheels[k].letter_order[pos]; //Finds the number at 'pos' and give it for the next wheel. This is needed for all wheel execpt the last (0'th) Wheel
+          //Finds the number at 'pos' and give it for the next wheel. This is needed for all wheel execpt the last (0'th) Wheel
+          pos = wheels[k].letter_order[pos]; 
         if (!no_debug)
         {
           char buf[25];
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  printf("%s %s %s %s",argv[1],argv[2],argv[3],argv[4]);
+  // printf("%s %s %s %s",argv[1],argv[2],argv[3],argv[4]);
   
   char *position = strdup(argv[1]);
 
