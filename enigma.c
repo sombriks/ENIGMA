@@ -1,356 +1,325 @@
+//Emulates the output of a WWII German Enigma encryption machine
+
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-const char *key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?\n ";
-const int letter_limit = 51;
+//#define DEBUG
+#define MAX_MESSAGE_LENGTH 100
 
-int no_debug = 0;
+//Strut Prototypes
+struct Rotor;
 
-struct wheel
-{
-  int letter_order[51];
-  char letters[51];
-  int enc_position;
-  int dec_position;
+//Function Prototypes
+void getInputMessage(char*, int*);
+void initialisePlugboard(char*, char*);
+void initialiseRotor(struct Rotor*, char*, char, char, char);
+void rotorShift(struct Rotor*, int);
+void enigmaEncode(char*, char*, int , struct Rotor*, struct Rotor*, struct Rotor*, struct Rotor*);
+char newLetter(char, struct Rotor*, struct Rotor*, struct Rotor*, struct Rotor*);
+void plugboardEncode(char*, char*, char*);
+
+//Structure to store individual rotor settings
+struct Rotor {
+
+	char rotorCurrentPosition;
+	char rotorOffset;
+	char ringPosition;
+	char carryPosition;
+	char leftToRight[26];
+	char rightToLeft[26];
+	
 };
 
-int charToNumber(char c)
-{
-  int v = -1;
-  int i = letter_limit;
-  while (i--)
-    if (c == key_order[i])
-      v = i;
-  return v;
+
+int main() {
+
+	char inputMessage[MAX_MESSAGE_LENGTH] = { 0 };
+	char outputMessage[MAX_MESSAGE_LENGTH] = { 0 };
+	char plugboardConnections[26];
+	int messageLength;
+	int i = 0;
+
+	struct Rotor rI, rII, rIII, rIV, rV, reflectorB, reflectorC;
+
+	//Initialise the default rotors and reflectors
+	//initialiseRotor(rotor pointer, "Rotor Wiring Connections", 'Rotor Offset', 'Ring Position', 'Notch Position');
+	initialiseRotor(&rI, "EKMFLGDQVZNTOWYHXUSPAIBRCJ", 'A', 'A', 'Q');
+	initialiseRotor(&rII, "AJDKSIRUXBLHWTMCQGZNPYFVOE", 'A', 'A', 'E');
+	initialiseRotor(&rIII, "BDFHJLCPRTXVZNYEIWGAKMUSQO", 'A', 'A', 'V');
+	initialiseRotor(&rIV, "ESOVPZJAYQUIRHXLNFTGKDCMWB", 'A', 'A', 'J');
+	initialiseRotor(&rV, "VZBRGITYUPSDNHLXAWMJQOFECK", 'A', 'A', 'Z');
+	initialiseRotor(&reflectorB, "YRUHQSLDPXNGOKMIEBFZCWVJAT", 'A', 'A', 'A');
+	initialiseRotor(&reflectorC, "FVPJIAOYEDRZXWGCTKUQSBNMHL", 'A', 'A', 'A');
+
+	//Setup plugboard connections. Use format "AH,JI,FY" 
+	//NB with the plugboard when input A is connected to output H, input H is also connected to output A, J=I and I=J, etc. This in not ture for the rotors.
+	initialisePlugboard("AA,BB", plugboardConnections);
+	
+	//Get input text and length
+	getInputMessage(inputMessage, &messageLength);
+
+	//Check for a valid message
+	if (messageLength == 0) {
+		printf("Unexpected character entered. Only A to Z are allowed\n");
+		system("PAUSE");
+		return -1;
+	}
+	
+	//First pass through Plugboard
+	plugboardEncode(inputMessage, messageLength, outputMessage, plugboardConnections);
+
+	//Copy Output back to input ready for next stage
+	memcpy(inputMessage, outputMessage, messageLength * sizeof(char));
+
+	//Pass through enigma rotors
+	enigmaEncode(inputMessage, outputMessage, messageLength, &rI, &rII, &rIII, &reflectorB);
+
+	//Copy Output back to input ready for next stage
+	memcpy(inputMessage, outputMessage, messageLength * sizeof(char));
+	
+	//Second pass though plugboard
+	plugboardEncode(inputMessage, messageLength, outputMessage, plugboardConnections);
+	
+	printf("Output Message:\t");
+	for (i = 0; i < messageLength; i++) {
+		printf("%c", outputMessage[i] + 65);
+	}
+	
+	printf("\n");
+	system("PAUSE");
+	return 0;
 }
 
-struct wheel makeWheel(char *order, int len)
-{
-  struct wheel wh;
-  for (int i = 0; i < len; i++)
-  {
-    wh.letter_order[i] = charToNumber(order[i]);
-    wh.letters[i] = order[i];
-  }
-  return wh;
+void initialisePlugboard(char *desiredPlugConnections, char* plugboardConnections) {
+	
+	int i = 0;
+
+	//Initialise all connections to be a normal passthrough. E.g. A to A, B to B, C to C, etc.
+	//A is stored as 0, B is stored as 1, Z is stored as 25, etc.
+	for (char x = 0; x < 26; x++){
+		plugboardConnections[x] = x;
+	}
+	
+	//Plug Settings are in format "AH,JI,FY" 
+	//This means A is connected to H and H is connected to A, J=I and I=J, etc
+	while (desiredPlugConnections[i] != '\0') {
+
+		if (desiredPlugConnections[i] == ',') {
+			i++;
+		}
+		else {
+
+			plugboardConnections[desiredPlugConnections[i] - 65] = desiredPlugConnections[i + 1] - 65;
+			plugboardConnections[desiredPlugConnections[i + 1] - 65] = desiredPlugConnections[i] - 65;
+			i += 2;
+		}		
+	}
+	
+	#ifdef DEBUG
+	printf("Plugboard Settings \n");
+	for (char x = 0; x < 26; x++){
+		printf("In: %c \t Out: %c\n\r", x + 65, plugboardConnections[x] + 65);
+	}
+	#endif
+	
+	return;
 }
 
-struct wheel wheels[4];
+void plugboardEncode(char *inputMessage, int messageLength, char *outputMessage, char *plugboardConnections ) {
 
-const int total_wheels = 4;
+	int i = 0;
 
-struct form
-{
-  char one;
-  char two;
-  char three;
-  char four;
-  int debug;
-};
+	for (i = 0; i < messageLength; i++) {
+		outputMessage[i] = plugboardConnections[inputMessage[i]];
+	}
 
-struct form f;
-
-int validate(char no)
-{
-  no = tolower(no); // ctype.h
-  int nu = charToNumber(no);
-  if (nu > letter_limit - 1)
-    nu = letter_limit - 1;
-  else if (nu < 0)
-    nu = 0;
-  return nu;
+	return;
 }
 
-/************ getInputs() :: Find the user set variables from forms ************/
-void getInputs()
-{
-  //Wheel starts at given positions
-  wheels[0].enc_position = validate(f.one);
-  wheels[1].enc_position = validate(f.two);
-  wheels[2].enc_position = validate(f.three);
-  wheels[3].enc_position = validate(f.four);
+void getInputMessage(char* inputMessage, int* messageLength) {
+	
+	int i = 0;
 
-  wheels[0].dec_position = validate(f.one);
-  wheels[1].dec_position = validate(f.two);
-  wheels[2].dec_position = validate(f.three);
-  wheels[3].dec_position = validate(f.four);
+	printf("Enter message: ");
+	
+	//Get user message. Max size is set by MAX_MESSAGE_LENGTH
+	fgets(inputMessage, MAX_MESSAGE_LENGTH, stdin);
 
-  if (f.debug)
-    no_debug = 0;
-  else
-    no_debug = 1;
+	//Go through all the entered chars and format them correctly
+	while (inputMessage[i] != '\n' && i < MAX_MESSAGE_LENGTH) {
+
+		//Replace spaces with X
+		if (inputMessage[i] == ' ') inputMessage[i] = 'X' - 65;
+
+		//Convert lower case letters to upper case and shift A-Z range to between 0 and 25 where A=0, B=1, C=2, etc
+		if (inputMessage[i] >= 97 && inputMessage[i] <= 122) inputMessage[i] -= 97;
+
+		//Shift to A-Z range to between 0 and 25 where A = 0, B = 1, C = 2, etc
+		if (inputMessage[i] >= 65 && inputMessage[i] <= 90) inputMessage[i] -= 65;
+
+		//Test to make sure all chars are now only in range A-Z. If they are not then quit
+		if (inputMessage[i] < 0 || inputMessage[i] > 25) {
+			*messageLength = 0;
+			return;
+		}
+
+		i++;
+	}
+
+	*messageLength = i;
+
+	#ifdef DEBUG
+	printf("Formatted Input: ");
+	for (i = 0; i < *messageLength; i++) {
+		printf("%c", inputMessage[i] + 65);
+	}	
+	printf("\tLength: %d\n", *messageLength);
+	#endif
+
+	return;
 }
 
-char *toLowerCase(char *input, int len)
-{
+void rotorShift(struct Rotor* rotor, int shiftSize) {
 
-  char *ret = malloc(len * sizeof(char));
+	char tempArray[26];
+	int i = 0;
+	int j = 0;
 
-  while (len--)
-  {
-    ret[len] = tolower(input[len]);
-  }
+	//Create a temp copy of the rotor connections so that is can be shifted
+	memcpy(&tempArray, &rotor->leftToRight, 26 * sizeof(char));
 
-  return ret;
+	for (i = 0; i < 26; i++) {
+
+		//Corrects the index when the shift wraps over the array
+		if (i + shiftSize < 0) {
+			j = (i + shiftSize) + 26;
+		}
+		else if (i + shiftSize > 25) {
+			j = (i + shiftSize) - 26;
+		}
+		else  j = i + shiftSize;
+
+		rotor->leftToRight[i] = tempArray[j];
+
+		//Adjust for at output of rotor
+
+		if (rotor->leftToRight[i] - shiftSize > 25) {
+			rotor->leftToRight[i] = (rotor->leftToRight[i] - shiftSize) - 26;
+		}
+		else if (rotor->leftToRight[i] - shiftSize < 0) {
+			rotor->leftToRight[i] = (rotor->leftToRight[i] - shiftSize) + 26;
+		}
+		else rotor->leftToRight[i] -= shiftSize;
+
+	}
+
+	//Convert from the Left to Right array to the Right to Left array
+	for (i = 0; i < 26; i++) {
+		rotor->rightToLeft[rotor->leftToRight[i]] = i;
+	}
+
+	//Update the current position variable in the rotor struct
+	if (rotor->rotorCurrentPosition + shiftSize > 25) {
+		rotor->rotorCurrentPosition = (rotor->rotorCurrentPosition + shiftSize) - 26;
+	}
+	else if (rotor->rotorCurrentPosition + shiftSize < 0) {
+		rotor->rotorCurrentPosition = (rotor->rotorCurrentPosition + shiftSize) + 26;
+	}
+	else rotor->rotorCurrentPosition += shiftSize;
+
 }
 
-struct txt
-{
-  char *value;
-};
+void initialiseRotor(struct Rotor* rotor, char* rotorConnections, char rotorOffset, char ringPosition, char carryPosition) {
 
-struct txt enigmalog;
+	//Fill in initial rotor struct with the provided parameters
 
-void info(int op, char *msg)
-{
-  // TODO implement
-  printf(msg);
+	int i = 0;
+	char initialOffset = 0;
+
+	//Assign the rotor connections. A is stored as 0, B is stored as 1, Z is stored as 25, etc.
+	//Connections should be provided as a string. Eg. "BGJKYU...." would map A to B, B to G, C to J, D to K, E to Y, and F to U etc.
+	for (i = 0; i < 26; i++){
+		rotor->leftToRight[i] = rotorConnections[i] - 65; //Minus 65 converts from ASCII to a number from 0-25
+	}
+	
+	//Convert from the Left to Right array to the Right to Left array
+	for (i = 0; i < 26; i++) {
+		rotor->rightToLeft[rotor->leftToRight[i]] = i;
+	}
+
+	//Set the offset, ring, and carry settings
+	//These are all stored as 0-25 instead of A to Z for easier calcs during operation
+	rotor->rotorOffset = rotorOffset - 65;
+	rotor->ringPosition = ringPosition - 65;
+	rotor->carryPosition = carryPosition - 65;
+	rotor->rotorCurrentPosition = 0;
+
+
+	//Calculate initial offset from the ring and offset settings
+	if ((rotorOffset - ringPosition) < 0)  {
+		initialOffset = (rotorOffset - ringPosition) + 26;
+	}
+	else   initialOffset = (rotorOffset - ringPosition);
+
+	//If there is an offset apply it to the rotor
+	if (initialOffset != 0) rotorShift(rotor, initialOffset);
+	
+	//Correct the rotor position variable as it will be wrong the first time due to the ring setting offset
+	rotor->rotorCurrentPosition = rotorOffset - 65;
+
+	#ifdef DEBUG
+	printf("Rotor settings\n");
+	for (char i = 0; i < 26; i++){
+		printf("In: %c\tL2R: %c\tR2L: %c\n\r", i + 65, rotor->leftToRight[i] + 65, rotor->rightToLeft[i] + 65);
+	}
+	#endif
+
+	
+	return;
 }
 
-char numberToChar(int b)
-{
-  char a = '*';
-  if (b >= 0 && b < letter_limit - 1)
-    a = key_order[b];
-  return a;
+//P1 = Position 1 which is the left most rotor. P3 = Position 3 which is the right most rotor
+char newLetter(char letter, struct Rotor* P1, struct Rotor* P2, struct Rotor* P3, struct Rotor* reflector) {
+
+	char firstPass, reflected, secondPass;
+	char carryPos;
+
+	//Always shift the first rotor
+	rotorShift(P3, 1);
+
+	//Catch case where carry position + 1 would overflow. i.e where the carry notch is at Z
+	if (P3->carryPosition + 1 > 25) carryPos = 0;
+	else carryPos = P3->carryPosition + 1;
+	
+	//Shift middle rotor if carry notch engaged
+	if (P3->rotorCurrentPosition == carryPos) {
+		
+		rotorShift(P2, 1);
+	}
+	//Double step condition - Shift both middle and left most rotor
+	else if (P2->rotorCurrentPosition == P2->carryPosition) {
+		rotorShift(P2, 1);
+		rotorShift(P1, 1);
+	}
+		
+	firstPass = P1->leftToRight[P2->leftToRight[P3->leftToRight[letter]]];
+	reflected = reflector->leftToRight[firstPass];
+	secondPass = P3->rightToLeft[P2->rightToLeft[P1->rightToLeft[reflected]]];
+
+	return secondPass;
+
 }
 
-//Encrytes the Message given as parameter
-char *Encryptor(char *raw_input_text, int input_len)
-{
+void enigmaEncode(char* inputMessage, char* outputMessage, int messageLength, struct Rotor* P1, struct Rotor* P2, struct Rotor* P3, struct Rotor* reflector) {
+	
+	int i = 0;
 
-  // setup wheels
-  getInputs();
+	//Pass each input letter through the rotors and store in the output array
+	for (i = 0; i < messageLength; i++) {
 
-  // input_text = input_text.toLowerCase(); //Convert to lower case
-  char *input_text = toLowerCase(raw_input_text, input_len);
-  int l = input_len;
+		outputMessage[i] = newLetter(inputMessage[i], P1, P2, P3, reflector);
+	}
 
-  char *output_text = malloc(input_len * sizeof(char));
-
-  for (int i = 0; i < l; i++)
-  {
-    char c = input_text[i];
-    int letters_number = charToNumber(c); //Get the numarical value
-    int pos = letters_number;
-
-    if (letters_number == -1)
-      c = '*'; //If the inputed char is not presente in the alphabet
-    else
-    {
-      if (!no_debug)
-      {
-        char buf[14];
-        sprintf(buf, "\nChar: %c,No:%d ->", c, letters_number);
-        info(2, buf); // "Char:" + c + ",No:" + fill(letters_number) + "->");
-      }               //To this for all the wheels
-      for (int k = total_wheels - 1; k >= 0; k--)
-      {
-        pos = pos + wheels[k].enc_position; //Turns the wheel to its 'enc_position'
-        if (pos >= letter_limit)
-          pos = pos - letter_limit; //Makes the corrections. The wheel is a circle. So if it is after 25 it must be corrected
-        if (k > 0)
-          //Finds the number at 'pos' and give it for the next wheel. This is needed for all wheel execpt the last (0'th) Wheel
-          pos = wheels[k].letter_order[pos]; 
-        if (!no_debug)
-        {
-          char buf[25];
-          sprintf(buf, "| %d (%d - %c) in W %d", pos, wheels[k].enc_position, wheels[k].letters[pos], k);
-          info(2, buf);
-          //           info(2, "|" + fill(pos) + "(" + fill(wheels[k].enc_position) + "-" + wheels[k].letters[pos] + ") in W " + k);
-        }
-      }
-      c = numberToChar(wheels[0].letter_order[pos]);
-      if (!no_debug)
-      {
-        char buf[5];
-        sprintf(buf, " -> %c", c);
-        info(0, buf);
-      }
-    }
-    wheels[0].enc_position++; //Turns the wheel one time
-
-    for (int k = 0; k < total_wheels; k++)
-    {
-      if (wheels[k].enc_position > letter_limit) //One full turn of any wheel is completed
-      {
-        wheels[k].enc_position = 0;
-        if (k + 1 != total_wheels)
-          wheels[k + 1].enc_position++; //Do this if the current wheel is not the last wheel
-      }
-    }
-
-    //     output_text = output_text + c; //Get the final result, letter by letter
-    output_text[i] = c;
-  }
-  if (!no_debug)
-  {
-    char buf[100];
-    sprintf(buf, "\nThe Encrypted text is \"%s\"\n", output_text);
-    info(0, buf);
-  }
-  return output_text;
+	return;
 }
-
-//Decrypts the Message
-char *Decryptor(char *raw_input_text, int input_len)
-{
-
-  // setup wheels
-  getInputs();
-
-  char *input_text = toLowerCase(raw_input_text, input_len);
-  int l = input_len;
-
-  char *output_text = malloc(input_len * sizeof(char));
-
-  for (int j = 0; j < l; j++)
-  {
-    char c = input_text[j];
-
-    char decrypt = ' ';
-    int to = -1;
-    int from = charToNumber(c); //Gets the 'from' of the encrypted charecter
-    int ch = from;
-    if (!no_debug)
-    {
-      char buf[14];
-      sprintf(buf, "\nChar: %c,No:%d ->", c, from);
-      info(2, buf); // info(2, "Char:" + c + ",No:" + fill(from) + "->")
-    }
-    for (int k = 0; k < total_wheels; k++)
-    {
-      for (int i = 0; i < letter_limit; i++) //Go thru every letter in the wheel,
-        if (wheels[k].letter_order[i] == ch)
-        {
-          ch = i;
-          break;
-        } //Searching the char 'c'(as a number) in the 'letter_order'. If found, the position is sorted in 'ch'.
-
-      ch = ch - wheels[k].dec_position; //Adjusts the wheel position
-      if (ch < 0)
-        ch = ch + letter_limit; //If the given 'to' is before a, find its original char from end
-      if (!no_debug)
-      {
-        //           info(2, "|" + fill(ch) + "(" + fill(wheels[k].dec_position) + "-" + wheels[k].letters[ch] + ") in W " + k);
-        char buf[25];
-        sprintf(buf, "| %d (%d - %c) in W %d", ch, wheels[k].dec_position, wheels[k].letters[ch], k);
-        info(2, buf);
-      }
-    }
-    to = ch;
-    wheels[0].dec_position++; //Turns the wheel one step
-
-    decrypt = numberToChar(to); //Find the letter in 'to'
-    if (c == '*')
-      decrypt = '*'; //If the inputed text is a non-recoganizable charector, output '*'
-    if (!no_debug)
-    {
-      //       info(0, " -> " + decrypt);
-      char buf[5];
-      sprintf(buf, " -> %c", decrypt);
-      info(0, buf);
-    }
-    for (int k = 0; k < total_wheels; k++)
-    {
-      if (wheels[k].dec_position > letter_limit) //If dec_position exeeds the limit, start at top
-      {
-        wheels[k].dec_position = 0;
-        if (k + 1 != total_wheels)
-          wheels[k + 1].dec_position++; //Do this if the current wheel is not the last wheel
-      }
-    }
-    output_text[j] = decrypt;
-  }
-  if (!no_debug)
-  {
-    //     info(0, "The Decrypted Text is \"" + output_text + "\"");
-    //     console.log(txt.value);
-    //     txt.value = "";
-    char buf[100];
-    sprintf(buf, "\nThe Decrypted text is \"%s\"\n", output_text);
-    info(0, buf);
-  }
-  return output_text;
-}
-
-int main(int argc, char **argv)
-{
-
-  // set up wheels
-  wheels[0] = makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?\n81\"5'+$(6)-7", letter_limit);
-  wheels[1] = makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9\n", letter_limit);
-  wheels[2] = makeWheel("x6pr8g7+2!n0$dw\\z?\n4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/", letter_limit);
-  wheels[3] = makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4\n", letter_limit);
-
-  if (argc < 3)
-  {
-    printf("usage:\n%s <POSITION> <OPERATION> [<DEBUG>] [<FILENAME>]\n", argv[0]);
-    printf("POSITION: the 4-letter initial rotor position (ex: AAAA)\n");
-    printf("OPERATION: either enc (to encrypt) or dec (to decrypt)\n");
-    printf("DEBUG: (optional) pass either 1 to get debug messages or 0 to leave it alone\n");
-    printf("FILENAME: provide a filename to read insteadof enter interactive mode\n");
-    return 1;
-  }
-
-  // printf("%s %s %s %s",argv[1],argv[2],argv[3],argv[4]);
-  
-  char *position = strdup(argv[1]);
-
-  if (strlen(position) < 4)
-  {
-    printf("You must provide 4 values tor the rotors (ex: AAAA)\n");
-    return 1;
-  }
-
-  // let's set up the rotors
-  f.one = position[0];
-  f.two = position[1];
-  f.three = position[2];
-  f.four = position[3];
-
-  int isenc = 1; // i'll assume encrypt
-  if (!strcmp("dec", argv[2]))
-    isenc = 0;
-
-  f.debug = 0;
-  if (argc > 3)
-    f.debug = atoi(argv[3]);
-  
-  char *buffer;
-  size_t length;
-  
-  // we're going to file mode
-  if(argc > 4 ){
-    
-    FILE *f = fopen (argv[4], "rb");
-    
-    if (f)
-    {
-      fseek (f, 0, SEEK_END);
-      length = ftell (f);
-      fseek (f, 0, SEEK_SET);
-      buffer = malloc (length);
-      if (buffer)
-      {
-        fread (buffer, 1, length, f);
-      }
-      fclose (f);
-    }
-  }else{
-    // no file provided, let's got to the interactive mode    
-    printf("provide the message to %s:\n< ", isenc ? "encrypt" : "decrypt");
-    // this is posix, should work everywhere!
-    getline(&buffer,&length,stdin);    
-  }
-
-  if(isenc)
-    printf("> %s\n",Encryptor(buffer,strlen(buffer)));
-  else
-    printf("> %s\n",Decryptor(buffer,strlen(buffer)));
-
-  return 0;
-}
-
