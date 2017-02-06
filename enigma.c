@@ -6,9 +6,9 @@
 ; UPDATED:   11/08/04                                                     *
 ;**************************************************************************
 
-     list p=16F628
+     list p=18F4550
 
-     include "p16f628.inc"
+     include "p18f4550.inc"
 
      __config _INTRC_OSC_NOCLKOUT & _WDT_ON & _PWRTE_ON & _BODEN_ON & _MCLRE_OFF & _LVP_OFF & _CP_ALL
 
