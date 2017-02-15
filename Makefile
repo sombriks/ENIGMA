@@ -6,7 +6,21 @@ enigma.o: enigma.c
 	gcc -g -c enigma.c
 
 clean:
-	rm -rf enigma.o enigma
+	rm -rf enigma
+	rm -rf enigma.o
+	rm -rf enigmapic.d
+	rm -rf enigmapic.p1
+	rm -rf enigmapic.as
+	rm -rf enigmapic.pre
+	rm -rf enigmapic.cmf
+	rm -rf enigmapic.cof
+	rm -rf enigmapic.obj
+	rm -rf enigmapic.hex
+	rm -rf enigmapic.hxl
+	rm -rf enigmapic.sdb
+	rm -rf enigmapic.sym
+	rm -rf startup.*
+	rm -rf doprnt.*
 	
 all: enigma
 	

@@ -26,15 +26,15 @@ int charToNumber(char c)
   return v;
 }
 
-struct wheel makeWheel(char *order, int len)
+void makeWheel(struct wheel *wh, char *order, int len)
 {
-  struct wheel wh;
+  // struct wheel wh;
   for (int i = 0; i < len; i++)
   {
-    wh.letter_order[i] = charToNumber(order[i]);
-    wh.letters[i] = order[i];
+    wh->letter_order[i] = charToNumber(order[i]);
+    wh->letters[i] = order[i];
   }
-  return wh;
+
 }
 
 struct wheel wheels[4];
@@ -153,7 +153,7 @@ char *Encryptor(char *raw_input_text, int input_len)
           pos = pos - letter_limit; //Makes the corrections. The wheel is a circle. So if it is after 25 it must be corrected
         if (k > 0)
           //Finds the number at 'pos' and give it for the next wheel. This is needed for all wheel execpt the last (0'th) Wheel
-          pos = wheels[k].letter_order[pos]; 
+          pos = wheels[k].letter_order[pos];
         if (!no_debug)
         {
           char buf[25];
@@ -280,10 +280,10 @@ int main(int argc, char **argv)
 {
 
   // set up wheels
-  wheels[0] = makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?\n81\"5'+$(6)-7", letter_limit);
-  wheels[1] = makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9\n", letter_limit);
-  wheels[2] = makeWheel("x6pr8g7+2!n0$dw\\z?\n4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/", letter_limit);
-  wheels[3] = makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4\n", letter_limit);
+  makeWheel(&(wheels[0]), (char *)"bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?\n81\"5'+$(6)-7", letter_limit);
+  makeWheel(&(wheels[1]), (char *)"chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9\n", letter_limit);
+  makeWheel(&(wheels[2]), (char *)"x6pr8g7+2!n0$dw\\z?\n4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/", letter_limit);
+  makeWheel(&(wheels[3]), (char *)"j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4\n", letter_limit);
 
   if (argc < 3)
   {
@@ -295,61 +295,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  // printf("%s %s %s %s",argv[1],argv[2],argv[3],argv[4]);
-  
-  char *position = strdup(argv[1]);
-
-  if (strlen(position) < 4)
-  {
-    printf("You must provide 4 values tor the rotors (ex: AAAA)\n");
-    return 1;
-  }
-
-  // let's set up the rotors
-  f.one = position[0];
-  f.two = position[1];
-  f.three = position[2];
-  f.four = position[3];
-
-  int isenc = 1; // i'll assume encrypt
-  if (!strcmp("dec", argv[2]))
-    isenc = 0;
-
-  f.debug = 0;
-  if (argc > 3)
-    f.debug = atoi(argv[3]);
-  
-  char *buffer;
-  size_t length;
-  
-  // we're going to file mode
-  if(argc > 4 ){
-    
-    FILE *f = fopen (argv[4], "rb");
-    
-    if (f)
-    {
-      fseek (f, 0, SEEK_END);
-      length = ftell (f);
-      fseek (f, 0, SEEK_SET);
-      buffer = malloc (length);
-      if (buffer)
-      {
-        fread (buffer, 1, length, f);
-      }
-      fclose (f);
-    }
-  }else{
-    // no file provided, let's got to the interactive mode    
-    printf("provide the message to %s:\n< ", isenc ? "encrypt" : "decrypt");
-    // this is posix, should work everywhere!
-    getline(&buffer,&length,stdin);    
-  }
-
-  if(isenc)
-    printf("> %s\n",Encryptor(buffer,strlen(buffer)));
-  else
-    printf("> %s\n",Decryptor(buffer,strlen(buffer)));
+  // TODO ler a configuração dos rotores e a string de entrada de algum modo.
+  // configurar um usb-serial, se possível, pra usar com este pic
 
   return 0;
 }
