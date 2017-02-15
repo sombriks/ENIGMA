@@ -7,18 +7,18 @@ enigma.o: enigma.c
 
 clean:
 	rm -rf enigma
-	rm -rf enigma.o
-	rm -rf enigmapic.d
-	rm -rf enigmapic.p1
-	rm -rf enigmapic.as
-	rm -rf enigmapic.pre
-	rm -rf enigmapic.cmf
-	rm -rf enigmapic.cof
-	rm -rf enigmapic.obj
-	rm -rf enigmapic.hex
-	rm -rf enigmapic.hxl
-	rm -rf enigmapic.sdb
-	rm -rf enigmapic.sym
+	rm -rf *.o
+	rm -rf *.d
+	rm -rf *.p1
+	rm -rf *.as
+	rm -rf *.pre
+	rm -rf *.cmf
+	rm -rf *.cof
+	rm -rf *.obj
+	rm -rf *.hex
+	rm -rf *.hxl
+	rm -rf *.sdb
+	rm -rf *.sym
 	rm -rf startup.*
 	rm -rf doprnt.*
 	
@@ -33,5 +33,12 @@ all: enigma
 # precisaremos disso aqui:
 # http://www.microchip.com/mplab/microchip-libraries-for-applications
 #
-pic: enigmapic.c
+
+piscaled: piscaled.c
+	xc8 --chip=18F4550 --codeoffset=0x1000 piscaled.c
+
+picusb: picusb.c
+	xc8 --chip=18F4550 --codeoffset=0x1000 picusb.c
+
+enigmapic: enigmapic.c
 	xc8 --chip=18F4550 --codeoffset=0x1000 enigmapic.c
