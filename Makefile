@@ -28,5 +28,10 @@ all: enigma
 # o codeoffset é usado para não sobrescrevermos o bootloader da placa de testes
 # a placa de testes é essa: 
 # http://www.afeletronica.com.br/pd-296167-pic-18f4550-afsmart-modulo-de-desenvolvimento.html
+#
+# pra usar a usb da placa (quando ela não estiver em modo de bootloader) 
+# precisaremos disso aqui:
+# http://www.microchip.com/mplab/microchip-libraries-for-applications
+#
 pic: enigmapic.c
 	xc8 --chip=18F4550 --codeoffset=0x1000 enigmapic.c
