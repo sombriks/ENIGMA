@@ -2,33 +2,43 @@
 <html>
 
 <head>
+  <meta charset="UTF-8">
   <script src="enigma.js"></script>
 </head>
 
 <body>
-<h3>The Enigma Machine Application</h3><br>
+  <h3>The Enigma Machine Application</h3><br>
 
-<form name="f">
-
-<b>Position</b><br>
-<input class="cipher" name="one" type="text" value="A" size=1>
-<input class="cipher" name="two" type="text" value="A" size=1>
-<input class="cipher" name="three" type="text" value="A" size=1>
-<input class="cipher" name="four" type="text" value="A" size=1>
-
-<br><br>
-<input type="checkbox" name="debug" id="debug" value="check me"> 
-<label for="debug">jogar debug no console</label>
-
-<br><br>
-Inputed Text: <input name="mess" type="text" value="Hello World"> <input type="button" value="Encrypt" onClick="decrypt.value = Encryptor(mess.value)">
-
-<br><br>
-Encrypted Text: <input name="decrypt" type="text" value=""> <input type="button" value="Decrypt" onClick="results.value = Decryptor(decrypt.value)">
-<br><br>
-Decrypted Text: <input name="results" type="text" value=""> <input type="button" value="Clear" onClick="decrypt.value='';results.value='';">
-</form>
-
+  <form name="f">
+    <b>Position</b><br>
+    <input class="cipher" name="one" type="text" value="A" size=1>
+    <input class="cipher" name="two" type="text" value="A" size=1>
+    <input class="cipher" name="three" type="text" value="A" size=1>
+    <input class="cipher" name="four" type="text" value="A" size=1>
+    <br><br>
+    <input type="checkbox" name="debug" id="debug" value="check me">
+    <label for="debug">jogar debug no console</label>
+    <table style="width:100%;">
+      <tbody>
+        <tr>
+          <td>
+            Inputed Text:
+            <textarea rows="30" style="width:100%;" name="mess" type="text" onkeyup="decrypt.value = Encryptor(mess.value)" value="Hello World"></textarea>
+            <!--<input type="button" value="Encrypt" onClick="decrypt.value = Encryptor(mess.value)">-->
+          </td>
+          <td>
+            Encrypted Text:
+            <textarea rows="30" style="width:100%;" name="decrypt" type="text" value="" onkeyup="results.value = Decryptor(decrypt.value)"></textarea>
+            <!--<input type="button" value="Decrypt" onClick="results.value = Decryptor(decrypt.value)">-->
+          </td>
+          <td>
+            Decrypted Text:
+            <textarea rows="30" style="width:100%;" name="results" type="text" value=""></textarea>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
 </body>
 
 </html>

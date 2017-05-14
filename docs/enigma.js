@@ -4,11 +4,11 @@
 
 /******************************** Wheel(ORDER) :: Constructor ******************************/
 
-var key_order = "abcdefghijklmnopqrstuvwxyz0123456789!\"$\'()+\\,-./?@ ";
+var key_order = "ç\nabcdefghijklmnãopqrsáétuvêwxyz0123456789!\"$\'()+\\,-./?@ ";
 
 function makeWheel(order) {
-    this.letter_order = new Array(51);
-    this.letters = new Array(51);
+    this.letter_order = new Array(key_order.length);
+    this.letters = new Array(key_order.length);
     this.enc_position = 0;
     this.dec_position = 0;
     for (i = 0; i < order.length; i++) {
@@ -16,6 +16,15 @@ function makeWheel(order) {
         this.letters[i] = order.charAt(i);
     }
 }
+
+//The Wheels
+var wheel = new Array(4);
+wheel[0] = new makeWheel("êbc\nagdefhilkjománçrqpu vstwzyx.94/ã3,20!\\?@é81\"5'+$(6)-7");
+wheel[1] = new makeWheel("chtzwef\ndbyiqáljuvskãgaxorpnm\"6-(1$873é,0ç4 /.!25'\\+?)ê9@");
+wheel[2] = new makeWheel("x6pr8g7+2á!n0\n$dw\\z?@4lhyêa5mo.v)9-,1 (3sãqiu'etçb\"jécfk/");
+wheel[3] = new makeWheel("j\"kbácefpl?/,vê6g\nw(2!0o.5yaémh1 -7r3s8x)9u$i+t\\z'qdãçn4@");
+var total_wheels = 4;
+
 //Gets the number of the letter ie. a=0,b=1,c=2 etc
 function charToNumber(c) {
     var v = -1;
@@ -33,17 +42,9 @@ function numberToChar(b) {
 
 var no_debug = 0
 
-//The Wheels
-var wheel = new Array(4);
-wheel[0] = new makeWheel("bcagdefhilkjomnrqpu vstwzyx.94/3,20!\\?@81\"5'+$(6)-7");
-wheel[1] = new makeWheel("chtzwefdbyiqljuvskgaxorpnm\"6-(1$873,04 /.!25'\\+?)9@");
-wheel[2] = new makeWheel("x6pr8g7+2!n0$dw\\z?@4lhya5mo.v)9-,1 (3sqiu'etb\"jcfk/");
-wheel[3] = new makeWheel("j\"kbcefpl?/,v6gw(2!0o.5yamh1 -7r3s8x)9u$i+t\\z'qdn4@");
-var total_wheels = 4
-
-var letter_order = new Array(51);
+var letter_order = new Array(key_order.length);
 var l = 0;
-var letter_limit = 51;
+var letter_limit = key_order.length;
 
 //Encrytes the Message given as parameter
 function Encryptor(input_text) {
