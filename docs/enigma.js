@@ -4,7 +4,7 @@
 
 /******************************** Wheel(ORDER) :: Constructor ******************************/
 
-var key_order = "ç\nabcàdefghijklmnãopqórsáétuvêwxyz0123456789!\"$\'(í)+\\,-./?@ ";
+var key_order = "ç\nabcàdefgúhijklmnãopqórsáétẽuvêwxyz01234567õ89!\"$\'(í)+\\,-./?@ ";
 
 function makeWheel(order) {
     this.letter_order = new Array(key_order.length);
@@ -19,10 +19,10 @@ function makeWheel(order) {
 
 //The Wheels
 var wheel = new Array(4);
-wheel[0] = new makeWheel("êbc\nagdefàhilkjománçrqpu vstwzyx.ó94/ã3,2í0!\\?@é81\"5'+$(6)-7");
-wheel[1] = new makeWheel("chtózwef\ndbyiqàáljuvskãgaxorpnm\"6-(1$87í3é,0ç4 /.!25'\\+?)ê9@");
-wheel[2] = new makeWheel("x6pr8g7+2á!n0\n$ódw\\z?@4làhyêa5mo.v)9-,í1 (3sãqiu'etçb\"jécfk/");
-wheel[3] = new makeWheel("j\"kbáceàfpl?/,vê6g\nw(2ó!0o.5yaémh1 -7r3ís8x)9u$i+t\\z'qdãçn4@");
+wheel[0] = new makeWheel("êbc\naúgdefàhilkjománçrqpẽu vstwzyx.ó94/ã3,2í0!\\?@é81\"5'+$(õ6)-7");
+wheel[1] = new makeWheel("chtózwef\ndbyúiqàáljuvskãgẽaxorpnm\"6-(1$87í3é,0ç4 /.!25'\\+õ?)ê9@");
+wheel[2] = new makeWheel("x6pr8g7+2á!n0\n$ódw\\z?@4làhẽyêa5múo.v)9-,í1 (3sãqiu'etçb\"õjécfk/");
+wheel[3] = new makeWheel("j\"kbáceàfpl?/,vê6g\núw(2ó!0oẽ.5yaémh1 -7r3ís8x)9u$i+t\\z'õqdãçn4@");
 var total_wheels = 4;
 
 //Gets the number of the letter ie. a=0,b=1,c=2 etc
