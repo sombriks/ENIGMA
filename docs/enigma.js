@@ -4,8 +4,6 @@
 
 /******************************** Wheel(ORDER) :: Constructor ******************************/
 
-var key_order = "ç\nabcàdefgúhijklmnãopqórsáétẽuvêwxyz01234567õ89!\"$\'(í)+\\,-./?@ ";
-
 function makeWheel(order) {
     this.letter_order = new Array(key_order.length);
     this.letters = new Array(key_order.length);
@@ -17,6 +15,7 @@ function makeWheel(order) {
     }
 }
 
+var key_order =         "ç\nabcàdefgúhijklmnãopqórsáétẽuvêwxyz01234567õ89!\"$\'(í)+\\,-./?@ ";
 //The Wheels
 var wheel = new Array(4);
 wheel[0] = new makeWheel("êbc\naúgdefàhilkjománçrqpẽu vstwzyx.ó94/ã3,2í0!\\?@é81\"5'+$(õ6)-7");
